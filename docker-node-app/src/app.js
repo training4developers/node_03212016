@@ -23,20 +23,30 @@ module.exports = function(config) {
 			fileName = pathName.substring(1);
 		}
 
-		fs.readFile(path.join(__dirname, config.webServer.folder, fileName),
-			"utf-8", function(err, data) {
+		var p = new Promise(function(resolve, reject) {
+			fs.readFile(path.join(__dirname, config.webServer.folder, fileName),
+				"utf-8", function(err, data) {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve(data);
+				});
+		});
 
-				if (err) {
-					console.log(util.inspect(err, {
-					 	depth: 0
-					}));
-					res.send("an error occurred");
-					return;
-				}
+		p.then(function(result) {
+			res.send(result);
+		}).catch(function(result) {
 
-				res.send(data);
+			// send back a 404 error if no file is found
+			// http://expressjs.com/en/4x/api.html#res
 
-			});
+			console.log(util.inspect(result, {
+				depth: 0
+			}));
+			res.send("an error occurred");
+		});
+
 		// console.log(util.inspect(url.parse(req.url), {
 		// 	depth: 0
 		// }));
